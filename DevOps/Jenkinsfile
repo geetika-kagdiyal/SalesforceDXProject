@@ -1,0 +1,163 @@
+#!groovy
+
+node('Windows_Slave') {
+    script
+    {
+        if (env.JOB_NAME == 'Crowley-Salesforce-QA') {
+            withCredentials([string(credentialsId: 'CROWLEY_SF_USERNAME_QA', variable: 'SF_USERNAME'),string(credentialsId: 'CROWLEY_SF_CONSUMER_KEY_QA', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'CROWLEY_SF_SERVER_KEY_CREDENTIALS_ID_QA', variable: 'SERVER_KEY_CREDENTIALS_ID'),string(credentialsId: 'CROWLEY_SF_INSTANCE_URL_QA', variable: 'SF_INSTANCE_URL')])
+            {
+                user_name = "${SF_USERNAME}"
+                consumer_key = "${SF_CONSUMER_KEY}"
+                server_key_id = "${SERVER_KEY_CREDENTIALS_ID}"
+                instance_url = "${SF_INSTANCE_URL}" ?: "https://test.salesforce.com"
+            }
+        }
+        else if (env.JOB_NAME == 'Crowley-Salesforce-UAT') {
+            withCredentials([string(credentialsId: 'CROWLEY_SF_USERNAME_UAT', variable: 'SF_USERNAME'),string(credentialsId: 'CROWLEY_SF_CONSUMER_KEY_UAT', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'CROWLEY_SF_SERVER_KEY_CREDENTIALS_ID_UAT', variable: 'SERVER_KEY_CREDENTIALS_ID'),string(credentialsId: 'CROWLEY_SF_INSTANCE_URL_UAT', variable: 'SF_INSTANCE_URL')])
+            {
+                user_name = "${SF_USERNAME}"
+                consumer_key = "${SF_CONSUMER_KEY}"
+                server_key_id = "${SERVER_KEY_CREDENTIALS_ID}"
+                instance_url = "${SF_INSTANCE_URL}" ?: "https://test.salesforce.com"
+            }
+        }       
+        else if (env.JOB_NAME == 'Crowley-Salesforce-Production') {
+            withCredentials([string(credentialsId: 'CROWLEY_SF_USERNAME_PROD', variable: 'SF_USERNAME'),string(credentialsId: 'CROWLEY_SF_CONSUMER_KEY_PROD', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'CROWLEY_SF_SERVER_KEY_CREDENTIALS_ID_PROD', variable: 'SERVER_KEY_CREDENTIALS_ID'),string(credentialsId: 'CROWLEY_SF_INSTANCE_URL_PROD', variable: 'SF_INSTANCE_URL')])
+            {
+                user_name = "${SF_USERNAME}"
+                consumer_key = "${SF_CONSUMER_KEY}"
+                server_key_id = "${SERVER_KEY_CREDENTIALS_ID}"
+                instance_url = "${SF_INSTANCE_URL}" ?: "https://test.salesforce.com"
+            }
+        }               
+        else if (env.JOB_NAME == 'Crowley-Salesforce-DevOps') {
+            withCredentials([string(credentialsId: 'CROWLEY_SF_USERNAME_QA', variable: 'SF_USERNAME'),string(credentialsId: 'CROWLEY_SF_CONSUMER_KEY_QA', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'CROWLEY_SF_SERVER_KEY_CREDENTIALS_ID_QA', variable: 'SERVER_KEY_CREDENTIALS_ID'),string(credentialsId: 'CROWLEY_SF_INSTANCE_URL_QA', variable: 'SF_INSTANCE_URL')])
+            {
+                user_name = "${SF_USERNAME}"
+                consumer_key = "${SF_CONSUMER_KEY}"
+                server_key_id = "${SERVER_KEY_CREDENTIALS_ID}"
+                instance_url = "${SF_INSTANCE_URL}" ?: "https://test.salesforce.com"
+            }
+        }
+    }
+    
+    def TEST_LEVEL = 'RunLocalTests'
+    
+    def toolbelt = tool 'salesforce'
+    
+    def commitFileName = "${env.JOB_NAME}.txt"
+
+    println consumer_key
+    println server_key_id
+    println user_name
+    println env.BRANCH_NAME
+    println commitFileName
+
+    // -------------------------------------------------------------------------
+    // Check out code from source control GIT
+    // -------------------------------------------------------------------------
+
+    stage('Clean Workspace') {
+
+        try {
+            deleteDir()
+        }
+        catch (Exception e) {
+            println("Unable to Clean WorkSpace.")
+        }
+
+    }
+
+    stage('Checkout Git Source') {
+        checkout scm
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Run all the enclosed stages with access to the Salesforce
+    // JWT key credentials.
+    // -------------------------------------------------------------------------
+
+   // withEnv(["HOME=${env.WORKSPACE}"]) {
+
+        withCredentials([file(credentialsId: SERVER_KEY_CREDENTIALS_ID, variable: 'server_key_file')]) {
+            // -------------------------------------------------------------------------
+            // Authenticate to Salesforce using the server key.
+            // -------------------------------------------------------------------------
+            //sfdx force:auth:logout --targetusername %USERNAME% -p =sfdx force:auth:logout --targetusername vidhi.saxena@nagarro.com.research -p
+            stage('Authorize to Salesforce') {
+                rc = command "${toolbelt}/sfdx force:auth:jwt:grant --instanceurl ${instance_url} --clientid ${consumer_key} --jwtkeyfile ${server_key_file} --username ${user_name} --setalias commdev1"
+                if (rc != 0) {
+                    error 'Salesforce org authorization failed.'
+                }
+                
+            }
+
+            //Run Powershell Sript - CHANGE HERE
+            stage('Delta Deployment') {
+                script {
+                    def lastID = bat 'powershell -command "cat DevOps\LastDeploymentState\${commitFileName}"'
+                    bat 'powershell -command "git diff-tree --no-commit-id --name-only -r ${lastID} head > list.txt"'
+                    bat 'python DevOps/Python/copyDeltaFiles.py'
+
+
+                    try {
+                        bat 'groovy DevOps/Groovy/PackageXMLGenerator.groovy delta/force-app/main/default delta/force-app/main/default/package.xml'
+                        bat 'sfdx force:mdapi:deploy -d delta/force-app/main/default -w 30'
+						bat 'git rev-parse HEAD > DevOps\LastDeploymentState\${commitFileName} '
+                        // Git commit latest deployed commitid
+                        bat 'git commit ${commitFileName} -m "Delta Deployment succeeded" '
+                        bat 'git push" '
+
+                    } catch (Exception e) {
+                        println("No files for Delta deployment")
+                    }
+                    
+                    try {
+                        bat 'groovy DevOps/Groovy/DestructiveXMLGenerator.groovy deltaDestruction/force-app/main/default deltaDestruction/force-app/main/default/manifest/destructiveChanges.xml'
+                        bat 'sfdx force:mdapi:deploy -d deltaDestruction/force-app/main/default/manifest -w 30'
+						bat 'git rev-parse HEAD > DevOps\LastDeploymentState\${commitFileName} '
+                        // Git commit latest deployed commitid
+                        bat 'git commit ${commitFileName} -m "Delta Deployment succeeded" '
+                        bat 'git push" '
+
+                    } catch (Exception e) {
+                        println("No files for Delta destruction deployment")
+                    }
+
+                }
+            }
+
+            // -------------------------------------------------------------------------
+            // Example shows how to run a check-only deploy.
+            // -------------------------------------------------------------------------
+            stage('Check Only Deploy') {
+                script {
+                    try {
+                        rc = command "${toolbelt}/sfdx force:mdapi:deploy -d delta/force-app/main/default -w 30"
+                        if (rc != 0) {
+                            error 'Salesforce deploy failed.'
+                        }
+                        else{
+                            // Git commit latest deployed commitid
+                            bat 'git commit ${commitFileName} -m "Delta Deployment succeeded" '
+                            bat 'git push" '
+                        }
+                    } catch (Exception e) {
+                        println("No Delta deployment")
+                    }
+
+                }
+            }
+            
+        }
+    //}
+}
+
+def command(script) {
+    if (isUnix()) {
+        return sh(returnStatus: true, script: script);
+    } else {
+        return bat(returnStatus: true, script: script);
+    }
+}
