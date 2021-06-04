@@ -12,45 +12,6 @@ node {
     def BUILD_NUMBER=env.BUILD_NUMBER
     def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
     def toolbelt = tool 'toolbelt'
-
-    script
-    {
-        if (env.JOB_NAME.contains('SalesforceDXProject/Crowley-Salesforce-QA')) {
-            withCredentials([string(credentialsId: 'SF_USERNAME', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
-            {
-                user_name = "${SF_USERNAME}"
-                consumer_key = "${SF_CONSUMER_KEY}"
-                server_key_id = "${SERVER_KEY_CREDENTIALS_ID}"
-                instance_url = "https://login.salesforce.com"
-            }
-        }
-        else if (env.JOB_NAME.contains('SalesforceDXProject/Crowley-Salesforce-UAT')) {
-            withCredentials([string(credentialsId: 'SF_USERNAME', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
-            {
-                user_name = "${SF_USERNAME}"
-                consumer_key = "${SF_CONSUMER_KEY}"
-                server_key_id = "${SERVER_KEY_CREDENTIALS_ID}"
-                instance_url = "https://login.salesforce.com"
-            }
-        }       
-        else if (env.JOB_NAME.contains('SalesforceDXProject/Crowley-Salesforce-Production')) {
-            withCredentials([string(credentialsId: 'SF_USERNAME', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
-            {
-                user_name = "${SF_USERNAME}"
-                consumer_key = "${SF_CONSUMER_KEY}"
-                server_key_id = "${SERVER_KEY_CREDENTIALS_ID}"
-                instance_url = "https://login.salesforce.com"
-            }
-        }               
-        
-        else{
-            user_name = "test"
-            consumer_key = "test"
-            server_key_id = 'test'
-            instance_url = "https://login.salesforce.com"
-        }
-        
-    } 
     
     println commitFilePath
     println consumer_key
