@@ -85,6 +85,7 @@ node {
     // Run all the enclosed stages with access to the Salesforce
     // JWT key credentials.
     // -------------------------------------------------------------------------
+   withEnv(["HOME=${env.WORKSPACE}"]) {
 
     withCredentials([file(credentialsId: "${server_key_id}", variable: 'server_key_file')]) {
         // -------------------------------------------------------------------------
@@ -203,6 +204,7 @@ node {
             }
         }
             */
+   	 }
     }
 }
 
