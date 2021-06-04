@@ -18,12 +18,7 @@ node
     def TEST_LEVEL='RunLocalTests'
     def SF_INSTANCE_URL = env.SF_INSTANCE_URL ?: "https://test.salesforce.com"
     def toolbelt = tool 'toolbelt'
-}
-
-script
-    { 
     
-    //
     // -------------------------------------------------------------------------
     // Check out code from source control GIT
     // -------------------------------------------------------------------------
@@ -110,16 +105,44 @@ script
             script{
                 println branchName
                 println latestID
-                bat 'git checkout ' + ''
+                bat 'git checkout ' + deploymentHistoryBranchName + ''
+
+                //bat '' + latestID + ' > DevOps\\LastDeploymentState\\' + commitFilePath + ' '
                 bat(label: 'Set file content', returnStdout: true, script:'@powershell -command "Set-Content -Path DevOps\\LastDeploymentState\\' + commitFilePath + ' -Value ' + latestID + ' -Force "')
                 // Git commit latest deployed commitid
+                //bat 'git commit ' + commitFileName + ' -m "Delta Deployment succeeded" '
                 def latest = bat(label: 'Get latest commit id', returnStdout: true, script:'@powershell -command "cat DevOps\\LastDeploymentState\\' + commitFilePath + '"').trim() as String
                 println latest
+                //bat 'git config core.autocrlf true'
                 bat 'git commit -am "Delta Deployment succeeded" '
+                //bat 'git remote show origin'
                 bat 'git push ' + git_repository_url + ' HEAD:' + deploymentHistoryBranchName + ' --force'
             }            
         }
 
+/* 
+        // -------------------------------------------------------------------------
+        // Example shows how to run a check-only deploy.
+        // -------------------------------------------------------------------------
+        stage('Check Only Deploy') {
+            script {
+                try {
+                    rc = command "${toolbelt}/sfdx force:mdapi:deploy -d delta/force-app/main/default -w 30 --targetusername ${user_name}"
+                    if (rc != 0) {
+                        error 'Salesforce deploy failed.'
+                    }
+                    else{
+                        // Git commit latest deployed commitid
+                        bat 'git commit ${commitFileName} -m "Delta Deployment succeeded" '
+                        bat 'git push '
+                    }
+                } catch (Exception e) {
+                    println("No Delta deployment")
+                }
+
+            }
+        }
+            */
     }
 }
 
