@@ -16,7 +16,7 @@ node {
     script
     {
         if (env.JOB_NAME.contains('SalesforceDXProject/Crowley-Salesforce-QA')) {
-            withCredentials([string(credentialsId: 'SF_USERNAME_UAT', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY_UAT', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
+            withCredentials([string(credentialsId: 'SF_USERNAME', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
             {
                 user_name = "${SF_USERNAME}"
                 consumer_key = "${SF_CONSUMER_KEY}"
@@ -25,7 +25,7 @@ node {
             }
         }
         else if (env.JOB_NAME.contains('SalesforceDXProject/Crowley-Salesforce-UAT')) {
-            withCredentials([string(credentialsId: 'SF_USERNAME_UAT', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY_UAT', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
+            withCredentials([string(credentialsId: 'SF_USERNAME', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
             {
                 user_name = "${SF_USERNAME}"
                 consumer_key = "${SF_CONSUMER_KEY}"
@@ -34,7 +34,7 @@ node {
             }
         }       
         else if (env.JOB_NAME.contains('SalesforceDXProject/Crowley-Salesforce-Production')) {
-            withCredentials([string(credentialsId: 'SF_USERNAME_UAT', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY_UAT', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
+            withCredentials([string(credentialsId: 'SF_USERNAME', variable: 'SF_USERNAME'),string(credentialsId: 'SF_CONSUMER_KEY', variable: 'SF_CONSUMER_KEY'),string(credentialsId: 'SF_SERVER_KEY_CREDENTIALS_ID', variable: 'SERVER_KEY_CREDENTIALS_ID')])
             {
                 user_name = "${SF_USERNAME}"
                 consumer_key = "${SF_CONSUMER_KEY}"
