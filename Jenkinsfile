@@ -12,6 +12,10 @@ node {
     def BUILD_NUMBER=env.BUILD_NUMBER
     def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
     def toolbelt = tool 'toolbelt'
+    def SF_CONSUMER_KEY=env.SF_CONSUMER_KEY
+    def SF_USERNAME=env.SF_USERNAME
+    def SERVER_KEY_CREDENTIALS_ID=env.SERVER_KEY_CREDENTIALS_ID
+    def SF_INSTANCE_URL = env.SF_INSTANCE_URL ?: "https://test.salesforce.com"
     
     println commitFilePath
     println consumer_key
@@ -46,20 +50,19 @@ node {
     // Run all the enclosed stages with access to the Salesforce
     // JWT key credentials.
     // -------------------------------------------------------------------------
-   withEnv(["HOME=${env.WORKSPACE}"]) {
+    withEnv(["HOME=${env.WORKSPACE}"]) {	
+	
+	    withCredentials([file(credentialsId: SERVER_KEY_CREDENTIALS_ID, variable: 'server_key_file')]) {
+		// -------------------------------------------------------------------------
+		// Authenticate to Salesforce using the server key.
+		// -------------------------------------------------------------------------
 
-    withCredentials([file(credentialsId: "${server_key_id}", variable: 'server_key_file')]) {
-        // -------------------------------------------------------------------------
-        // Authenticate to Salesforce using the server key.
-        // -------------------------------------------------------------------------
-        stage('Authorize to Salesforce') {
-            rc = command "${toolbelt}/sfdx force:auth:logout --targetusername ${user_name} -p"
-            rc = command "${toolbelt}/sfdx force:auth:jwt:grant --instanceurl ${instance_url} --clientid ${consumer_key} --jwtkeyfile ${server_key_file} --username ${user_name} --setdefaultdevhubusername"
-            if (rc != 0) {
-                error 'Salesforce org authorization failed.'
-            }
-            
-        }
+		stage('Authorize to Salesforce') {
+			rc = command "${toolbelt}/sfdx auth:jwt:grant --instanceurl ${SF_INSTANCE_URL} --clientid ${SF_CONSUMER_KEY} --jwtkeyfile ${server_key_file} --username ${SF_USERNAME} --setalias UATSFDX"
+		    if (rc != 0) {
+			error 'Salesforce org authorization failed.'
+		    }
+		}
 
         stage('Get Last Deployment'){
             script{
@@ -90,7 +93,7 @@ node {
 
                 try {
                     bat 'groovy PackageXMLGenerator.groovy delta/force-app/main/default delta/force-app/main/default/package.xml'
-                    bat 'sfdx force:mdapi:deploy -d delta/force-app/main/default -w 30 --targetusername ' + user_name + ''
+                    bat 'sfdx force:mdapi:deploy -d delta/force-app/main/default -w 30 --targetusername ' + SF_USERNAME + ''
                     // latestID = bat(label: 'Get latest commit id', returnStdout: true, script:'@git rev-parse HEAD').trim() as String
                     // println latestID
                     //bat 'git rev-parse HEAD > DevOps\\LastDeploymentState\\' + commitFilePath + ' '
@@ -110,7 +113,7 @@ node {
                 
                 try {
                     bat 'groovy DestructiveXMLGenerator.groovy deltaDestruction/force-app/main/default deltaDestruction/force-app/main/default/manifest/destructiveChanges.xml'
-                    bat 'sfdx force:mdapi:deploy -d deltaDestruction/force-app/main/default/manifest -w 30 --targetusername ' + user_name + ''
+                    bat 'sfdx force:mdapi:deploy -d deltaDestruction/force-app/main/default/manifest -w 30 --targetusername ' + SF_USERNAME + ''
                     //bat 'git rev-parse HEAD > DevOps\\LastDeploymentState\\' + commitFilePath + ' '                    
                     
                 } catch (Exception e) {
