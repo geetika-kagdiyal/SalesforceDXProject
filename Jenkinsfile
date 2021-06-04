@@ -1,5 +1,4 @@
 #!groovy
-#!groovy
 
 node {
     def branchName
