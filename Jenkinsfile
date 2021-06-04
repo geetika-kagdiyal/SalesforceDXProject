@@ -1,5 +1,5 @@
 #!groovy
-
+import groovy.json.JsonSlurperClassic
 node {
     def branchName
     def lastID
