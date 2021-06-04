@@ -1,16 +1,15 @@
 #!groovy
-
 node 
 {
-	def branchName
+    def branchName
     def lastID
     def latestID
-	def deploymentHistoryBranchName = 'deployment'
-	def toolbelt = tool 'salesforce'
-    def groovy = tool 'groovy-3.0.4'
-	def commitFileName = "${env.JOB_NAME}.txt"
+    def deploymentHistoryBranchName = 'deployment'
+    //def toolbelt = tool 'salesforce'
+    //def groovy = tool 'groovy-3.0.4'
+    def commitFileName = "${env.JOB_NAME}.txt"
     def commitFilePath = commitFileName.replaceAll('/','\\\\')
-	def BUILD_NUMBER=env.BUILD_NUMBER
+    def BUILD_NUMBER=env.BUILD_NUMBER
     def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
     def SF_CONSUMER_KEY=env.SF_CONSUMER_KEY
     def SF_USERNAME=env.SF_USERNAME
@@ -131,4 +130,3 @@ def command(script) {
         return bat(returnStatus: true, script: script);
     }
 }
-
