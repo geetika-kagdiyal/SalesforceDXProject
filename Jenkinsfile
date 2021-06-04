@@ -6,10 +6,10 @@ node {
     def latestID
     def deploymentHistoryBranchName = 'deployment'
     def TEST_LEVEL = 'RunLocalTests'    
-    def toolbelt = tool 'salesforce'
+    //def toolbelt = tool 'salesforce'
     def commitFileName = "${env.JOB_NAME}.txt"
     def commitFilePath = commitFileName.replaceAll('/','\\\\')
-	def BUILD_NUMBER=env.BUILD_NUMBER
+    def BUILD_NUMBER=env.BUILD_NUMBER
     def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
     def toolbelt = tool 'toolbelt'
 
