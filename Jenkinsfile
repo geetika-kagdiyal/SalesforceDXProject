@@ -6,17 +6,22 @@ node {
     def latestID
     def deploymentHistoryBranchName = 'deployment'
     def TEST_LEVEL = 'RunLocalTests'    
-    //def toolbelt = tool 'salesforce'
     def commitFileName = "${env.JOB_NAME}.txt"
     def commitFilePath = commitFileName.replaceAll('/','\\\\')
     def BUILD_NUMBER=env.BUILD_NUMBER
     def RUN_ARTIFACT_DIR="tests/${BUILD_NUMBER}"
-    def toolbelt = tool 'toolbelt'
+    
+    
     def SF_CONSUMER_KEY=env.SF_CONSUMER_KEY
     def SF_USERNAME=env.SF_USERNAME
     def SERVER_KEY_CREDENTIALS_ID=env.SERVER_KEY_CREDENTIALS_ID
+    def DEPLOYDIR='src'
+    def TEST_LEVEL='RunLocalTests'
     def SF_INSTANCE_URL = env.SF_INSTANCE_URL ?: "https://test.salesforce.com"
-    
+
+
+    def toolbelt = tool 'toolbelt'
+   
     println commitFilePath
     println consumer_key
     println server_key_id
