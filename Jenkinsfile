@@ -5,7 +5,7 @@ node {
     def lastID
     def latestID
     def deploymentHistoryBranchName = 'deployment'
-    def TEST_LEVEL = 'RunLocalTests'    
+     
     def commitFileName = "${env.JOB_NAME}.txt"
     def commitFilePath = commitFileName.replaceAll('/','\\\\')
     def BUILD_NUMBER=env.BUILD_NUMBER
